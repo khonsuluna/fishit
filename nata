@@ -533,19 +533,32 @@ UIList.Padding = UDim.new(0, 6)
 
 -- FIRST MENU FRAME (pilihan places / players)
 local TeleportMenu = Instance.new("Frame")
-TeleportMenu.Size = UDim2.new(1, 0, 1, -40)
-TeleportMenu.Position = UDim2.new(0, 0, 0, 40)
-TeleportMenu.BackgroundTransparency = 1
+TeleportMenu.Size = UDim2.new(0, 200, 0, 120)
+TeleportMenu.Position = UDim2.new(0.5, -100, 0.5, -60)
+TeleportMenu.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 TeleportMenu.ZIndex = 30
 TeleportMenu.Parent = TeleportFrame
+
+local MenuCorner = Instance.new("UICorner")
+MenuCorner.CornerRadius = UDim.new(0, 8)
+MenuCorner.Parent = TeleportMenu
+
+local MenuPadding = Instance.new("UIPadding")
+MenuPadding.PaddingTop = UDim.new(0, 10)
+MenuPadding.PaddingBottom = UDim.new(0, 10)
+MenuPadding.PaddingLeft = UDim.new(0, 10)
+MenuPadding.PaddingRight = UDim.new(0, 10)
+MenuPadding.Parent = TeleportMenu
 
 local MenuList = Instance.new("UIListLayout")
 MenuList.Parent = TeleportMenu
 MenuList.Padding = UDim.new(0, 8)
+MenuList.FillDirection = Enum.FillDirection.Vertical
+MenuList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+MenuList.VerticalAlignment = Enum.VerticalAlignment.Top
 
 local PlacesBtn = Instance.new("TextButton")
-PlacesBtn.Size = UDim2.new(1, -20, 0, 40)
-PlacesBtn.Position = UDim2.new(0, 10, 0, 0)
+PlacesBtn.Size = UDim2.new(1, 0, 0, 40)
 PlacesBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
 PlacesBtn.TextColor3 = Color3.new(1,1,1)
 PlacesBtn.Font = Enum.Font.GothamBold
@@ -559,8 +572,7 @@ PCorner.CornerRadius = UDim.new(0, 6)
 PCorner.Parent = PlacesBtn
 
 local PlayersBtn = Instance.new("TextButton")
-PlayersBtn.Size = UDim2.new(1, -20, 0, 40)
-PlayersBtn.Position = UDim2.new(0, 10, 0, 0)
+PlayersBtn.Size = UDim2.new(1, 0, 0, 40)
 PlayersBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
 PlayersBtn.TextColor3 = Color3.new(1,1,1)
 PlayersBtn.Font = Enum.Font.GothamBold
