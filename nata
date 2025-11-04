@@ -1,0 +1,665 @@
+--// Fishing GUI (Modern Minimalist Edition + Auto Weather + Minimize + Waypoints + Teleport) by Nata 🎣
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Cleanup previous GUI
+if playerGui:FindFirstChild("FishingGUI") then
+	playerGui:FindFirstChild("FishingGUI"):Destroy()
+end
+if playerGui:FindFirstChild("FishingIcon") then
+	playerGui:FindFirstChild("FishingIcon"):Destroy()
+end
+
+-- Remote
+local net = ReplicatedStorage.Packages._Index:FindFirstChild("sleitnick_net@0.2.0").net
+local RFChargeFishingRod = net:FindFirstChild("RF/ChargeFishingRod")
+local RFRequestFishingMinigameStarted = net:FindFirstChild("RF/RequestFishingMinigameStarted")
+local REFishingCompleted = net:FindFirstChild("RE/FishingCompleted")
+local RFCancelFishingInputs = net:FindFirstChild("RF/CancelFishingInputs")
+local RFSellAllItems = net:FindFirstChild("RF/SellAllItems")
+local RFPurchaseWeatherEvent = net:FindFirstChild("RF/PurchaseWeatherEvent")
+
+-- Variables
+local isFishing = false
+local delayValue = 1.2
+local autoWeather = false
+local weatherLoopThread
+
+local waypoints = {
+    jungle = Vector3.new(1474, 6, -336),
+    statue = Vector3.new(-3735, -135, -1011),
+room = Vector3.new(-3597, -276, -1641),
+kohana = Vector3.new(-942, 5, 668),
+volcano = Vector3.new(-587, 59, 106),
+hallow = Vector3.new(2124, 104, 3342),
+island = Vector3.new(981, 44, 5071),
+reefs = Vector3.new(-2957, 15, 2056),
+depths = Vector3.new(3236, -1303, 1397),
+grove = Vector3.new(-2088, 6, 3650),
+fisherman = Vector3.new(-137, 3, 2765),
+temple = Vector3.new(1501, -30, -560),
+cavern = Vector3.new(-1785, -435, 7290),
+falls = Vector3.new(-1956, -440, 7389)
+}
+
+---------------------------------------------------------------------
+--// GUI CREATION
+---------------------------------------------------------------------
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FishingGUI"
+ScreenGui.Parent = playerGui
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 230, 0, 120)
+Frame.Position = UDim2.new(0.5, -115, 0.8, -60)
+Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Frame.BorderSizePixel = 0
+Frame.BackgroundTransparency = 0.1
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = Frame
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -100, 0, 22)
+Title.Position = UDim2.new(0, 10, 0, 5)
+Title.BackgroundTransparency = 1
+Title.Text = "🎣 NATA AutoFish"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextStrokeTransparency = 0.5
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Frame
+-- 🧭 Tombol Teleport
+local TeleportBtn = Instance.new("TextButton")
+TeleportBtn.Name = "TeleportBtn"
+TeleportBtn.Parent = Frame
+TeleportBtn.Size = UDim2.new(0, 25, 0, 25)
+TeleportBtn.Position = UDim2.new(1, -90, 0, 5)
+TeleportBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+TeleportBtn.Text = "🧭"
+TeleportBtn.TextScaled = true
+TeleportBtn.TextColor3 = Color3.new(1, 1, 1)
+TeleportBtn.Font = Enum.Font.GothamBold
+TeleportBtn.BorderSizePixel = 0
+TeleportBtn.AutoButtonColor = true
+TeleportBtn.MouseEnter:Connect(function()
+	TeleportBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+end)
+TeleportBtn.MouseLeave:Connect(function()
+	TeleportBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+end)
+-- Delay info
+local DelayLabel = Instance.new("TextLabel")
+DelayLabel.Position = UDim2.new(0, 15, 0, 25)
+DelayLabel.Size = UDim2.new(1, -30, 0, 25)
+DelayLabel.BackgroundTransparency = 1
+DelayLabel.Text = "Delay: " .. delayValue .. " detik"
+DelayLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+DelayLabel.Font = Enum.Font.GothamSemibold
+DelayLabel.TextSize = 14
+DelayLabel.TextXAlignment = Enum.TextXAlignment.Left
+DelayLabel.Parent = Frame
+-- Input box
+local DelayInput = Instance.new("TextBox")
+DelayInput.Position = UDim2.new(0, 15, 0, 50)
+DelayInput.Size = UDim2.new(0, 60, 0, 25)
+DelayInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+DelayInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+DelayInput.PlaceholderText = tostring(delayValue)
+DelayInput.Text = ""
+DelayInput.ClearTextOnFocus = false
+DelayInput.Font = Enum.Font.Gotham
+DelayInput.TextSize = 14
+DelayInput.Parent = Frame
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 6)
+InputCorner.Parent = DelayInput
+
+DelayInput.FocusLost:Connect(function()
+	local val = tonumber(DelayInput.Text)
+	if val then
+		delayValue = val
+		DelayLabel.Text = "Delay: " .. delayValue .. " detik"
+	end
+end)
+
+-- Toggle button
+local Toggle = Instance.new("TextButton")
+Toggle.Size = UDim2.new(0, 90, 0, 30)
+Toggle.Position = UDim2.new(0.5, -95, 1, -40)
+Toggle.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
+Toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+Toggle.Text = "Start"
+Toggle.Font = Enum.Font.GothamBold
+Toggle.TextSize = 14
+Toggle.Parent = Frame
+
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 8)
+BtnCorner.Parent = Toggle
+
+-- Sell button with loop toggle
+local SellBtn = Instance.new("TextButton")
+SellBtn.Size = UDim2.new(0, 90, 0, 30)
+SellBtn.Position = UDim2.new(0.5, 5, 1, -40)
+SellBtn.BackgroundColor3 = Color3.fromRGB(255, 170, 50)
+SellBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SellBtn.Text = "Jual Ikan"
+SellBtn.Font = Enum.Font.GothamBold
+SellBtn.TextSize = 14
+SellBtn.Parent = Frame
+
+local SellCorner = Instance.new("UICorner")
+SellCorner.CornerRadius = UDim.new(0, 8)
+SellCorner.Parent = SellBtn
+
+-- Toggle loop variable
+local sellingLoop = false
+
+SellBtn.MouseButton1Click:Connect(function()
+	if not sellingLoop then
+		-- Mulai loop
+		sellingLoop = true
+		SellBtn.Text = "Batal Jual"
+		task.spawn(function()
+			while sellingLoop do
+				if RFSellAllItems then
+					RFSellAllItems:InvokeServer()
+				end
+				-- Delay 1 jam (3600 detik)
+				for i = 1, 3600 do
+					if not sellingLoop then break end
+					task.wait(1)
+				end
+			end
+		end)
+	else
+		-- Stop loop
+		sellingLoop = false
+		SellBtn.Text = "Jual Ikan"
+	end
+end)
+
+-- Close button
+local Close = Instance.new("TextButton")
+Close.Text = "X"
+Close.Size = UDim2.new(0, 25, 0, 25)
+Close.Position = UDim2.new(1, -30, 0, 5)
+Close.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+Close.TextColor3 = Color3.fromRGB(255, 255, 255)
+Close.Font = Enum.Font.GothamBold
+Close.TextSize = 14
+Close.Parent = Frame
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(1, 0)
+CloseCorner.Parent = Close
+
+-- Minimize button
+local Minimize = Instance.new("TextButton")
+Minimize.Text = "-"
+Minimize.Size = UDim2.new(0, 25, 0, 25)
+Minimize.Position = UDim2.new(1, -60, 0, 5)
+Minimize.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+Minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
+Minimize.Font = Enum.Font.GothamBold
+Minimize.TextSize = 18
+Minimize.Parent = Frame
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(1, 0)
+MinCorner.Parent = Minimize
+
+-- Fishing Icon (for minimized state)
+local FishingIcon = Instance.new("TextButton")
+FishingIcon.Text = "" -- kosong
+FishingIcon.Size = UDim2.new(0, 120, 0, 45) -- lebih lebar
+FishingIcon.Position = UDim2.new(0.5, -60, 0.5, -22)
+FishingIcon.BackgroundTransparency = 1
+local Label = Instance.new("TextLabel")
+Label.Text = "🎣 NATA"
+Label.Font = Enum.Font.GothamBold
+Label.TextSize = 28
+Label.Size = UDim2.new(1, 0, 1, 0)
+Label.BackgroundTransparency = 1
+Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+Label.Parent = FishingIcon
+FishingIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+FishingIcon.BorderSizePixel = 0
+FishingIcon.Visible = false
+FishingIcon.Active = true
+FishingIcon.Draggable = true
+FishingIcon.Parent = ScreenGui
+
+-- Minimize behavior
+Minimize.MouseButton1Click:Connect(function()
+	Frame.Visible = false
+	FishingIcon.Visible = true
+end)
+
+FishingIcon.MouseButton1Click:Connect(function()
+	Frame.Visible = true
+	FishingIcon.Visible = false
+end)
+---------------------------------------------------------------------
+--// WAYPOINT & TELEPORT COMMANDS -----------------------------------
+---------------------------------------------------------------------
+local function sendMessage(text)
+	game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+		Text = text;
+		Color = Color3.fromRGB(0, 255, 128);
+		Font = Enum.Font.SourceSansBold;
+		FontSize = Enum.FontSize.Size24;
+	})
+end
+
+local function teleportTo(pos)
+	if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		player.Character.HumanoidRootPart.CFrame = CFrame.new(pos)
+	end
+end
+
+local function saveWaypoint(name)
+	if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		waypoints[name] = player.Character.HumanoidRootPart.Position
+		sendMessage("Waypoint '"..name.."' tersimpan ✅")
+	end
+end
+
+local function teleportToWaypoint(name)
+	local found = nil
+	local foundName = nil
+	name = name:lower()
+	for wpName, pos in pairs(waypoints) do
+		if wpName:lower():sub(1, #name) == name then
+			found = pos
+			foundName = wpName
+			break
+		end
+	end
+	if found then
+		teleportTo(found)
+		sendMessage("Teleport ke waypoint '"..foundName.."' berhasil ✅")
+	else
+		sendMessage("Waypoint '"..name.."' tidak ditemukan ❌")
+	end
+end
+
+local function clearWaypoints()
+	waypoints = {}
+	sendMessage("Semua waypoint telah dihapus ✅")
+end
+
+local function deleteWaypoint(name)
+	name = name:lower()
+	for wpName, _ in pairs(waypoints) do
+		if wpName:lower():sub(1, #name) == name then
+			waypoints[wpName] = nil
+			sendMessage("Waypoint '"..wpName.."' dihapus ✅")
+			return
+		end
+	end
+	sendMessage("Waypoint '"..name.."' tidak ditemukan ❌")
+end
+
+local function teleportToPlayer(name)
+	name = name:lower()
+	local target = nil
+	for _, plr in pairs(Players:GetPlayers()) do
+		if plr.Name:lower():sub(1, #name) == name or (plr.DisplayName and plr.DisplayName:lower():sub(1, #name) == name) then
+			target = plr
+			break
+		end
+	end
+	if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+		teleportTo(target.Character.HumanoidRootPart.Position)
+		sendMessage("Teleport ke player '"..target.Name.."' berhasil ✅")
+	else
+		sendMessage("Player '"..name.."' tidak ditemukan ❌")
+	end
+end
+
+-- Chat commands
+player.Chatted:Connect(function(msg)
+	local args = string.split(msg, " ")
+	local command = args[1]:lower()
+
+	if command == "!sv" and args[2] then
+		saveWaypoint(args[2])
+	elseif command == "!tp" and args[2] then
+		teleportToWaypoint(args[2])
+	elseif command == "!listwp" then
+		sendMessage("Waypoints tersimpan:")
+		for name, _ in pairs(waypoints) do
+			sendMessage(name)
+		end
+	elseif command == "!clr" then
+		clearWaypoints()
+	elseif command == "!del" and args[2] then
+		deleteWaypoint(args[2])
+	elseif command == "!to" and args[2] then
+		teleportToPlayer(args[2])
+	end
+end)
+
+---------------------------------------------------------------------
+--// FISHING LOOP ---------------------------------------------------
+---------------------------------------------------------------------
+local function fishingLoop()
+	while isFishing do
+		-- Step 1: Charge fishing rod
+		local RemoteArgs = {
+			[4] = workspace:GetServerTimeNow()
+		}
+		RFChargeFishingRod:InvokeServer(unpack(RemoteArgs, 1, table.maxn(RemoteArgs)))
+
+		-- Step 2: Tunggu 0.057 detik
+		task.wait(0.033)
+
+		-- Step 3: Mulai minigame dengan angka acak 0.97–0.99 (16 digit desimal)
+		local randomValue = tonumber(string.format("%.16f", (math.random() * 0.04 + 0.95)))
+		RFRequestFishingMinigameStarted:InvokeServer(-0.5718746185302734, randomValue, workspace:GetServerTimeNow())
+
+		-- Step 4: Tunggu delay, lalu selesaikan fishing
+		task.wait(delayValue)
+		REFishingCompleted:FireServer()
+	end
+end
+
+Toggle.MouseButton1Click:Connect(function()
+	if not isFishing then
+		isFishing = true
+		Toggle.Text = "Stop"
+		Toggle.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+		task.spawn(fishingLoop)
+	else
+		isFishing = false
+		Toggle.Text = "Stopping..."
+		Toggle.BackgroundColor3 = Color3.fromRGB(255, 120, 50)
+		task.wait(4)
+		RFCancelFishingInputs:InvokeServer()
+		Toggle.Text = "Start"
+		Toggle.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
+	end
+end)
+
+Close.MouseButton1Click:Connect(function()
+	-- Matikan loop auto cuaca jika sedang aktif
+	if autoWeather then
+		autoWeather = false
+		WeatherBtn.Text = "❌ Cuaca OFF"
+		task.wait(1)
+		WeatherBtn.Text = "⚡💨☁️"
+	end
+
+	-- Hancurkan GUI terlebih dahulu
+	ScreenGui:Destroy()
+
+	-- Tunggu 6 detik sebelum membatalkan fishing
+	task.wait(6)
+
+	-- Jalankan cancel fishing setelah jeda
+	RFCancelFishingInputs:InvokeServer()
+end)
+
+---------------------------------------------------------------------
+--// AUTO WEATHER FEATURE --------------------------------------------
+---------------------------------------------------------------------
+local WeatherBtn = Instance.new("TextButton")
+WeatherBtn.Name = "WeatherBtn"
+WeatherBtn.Size = UDim2.new(0, 90, 0, 25)
+WeatherBtn.Position = UDim2.new(1, -95, 0, 35)
+WeatherBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+WeatherBtn.Text = "⚡💨☁️"
+WeatherBtn.TextColor3 = Color3.new(1, 1, 1)
+WeatherBtn.Font = Enum.Font.GothamBold
+WeatherBtn.TextSize = 14
+WeatherBtn.Parent = Frame
+
+local WeatherCorner = Instance.new("UICorner")
+WeatherCorner.CornerRadius = UDim.new(0, 6)
+WeatherCorner.Parent = WeatherBtn
+
+local function buyAllWeather()
+	if not RFPurchaseWeatherEvent then return end
+	RFPurchaseWeatherEvent:InvokeServer("Storm")
+	task.wait(1)
+	RFPurchaseWeatherEvent:InvokeServer("Wind")
+	task.wait(1)
+	RFPurchaseWeatherEvent:InvokeServer("Cloudy")
+end
+
+WeatherBtn.MouseButton1Click:Connect(function()
+	autoWeather = not autoWeather
+	if autoWeather then
+		WeatherBtn.Text = "☀️ Cuaca ON"
+		task.spawn(function()
+			task.wait(5)
+			if autoWeather then
+				WeatherBtn.Text = "⚡💨☁️"
+			end
+		end)
+		weatherLoopThread = task.spawn(function()
+			while autoWeather do
+				buyAllWeather()
+				for i = 1, 900 do
+					if not autoWeather then
+						return
+					end
+					task.wait(1)
+				end
+			end
+		end)
+	else
+		WeatherBtn.Text = "❌ Cuaca OFF"
+		task.wait(5)
+		WeatherBtn.Text = "⚡💨☁️"
+	end
+end)
+
+-- TELEPORT POPUP FRAME --------------------------------------------
+local TeleportFrame = Instance.new("Frame")
+TeleportFrame.Name = "TeleportFrame"
+TeleportFrame.Size = UDim2.new(0, 250, 0, 280)
+TeleportFrame.Position = UDim2.new(0.5, -125, 0.5, -140)
+TeleportFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+TeleportFrame.Visible = false
+TeleportFrame.ZIndex = 20
+TeleportFrame.Parent = playerGui:WaitForChild("FishingGUI")
+-- Tombol X untuk menutup frame teleport
+local CloseTeleportBtn = Instance.new("TextButton")
+CloseTeleportBtn.Name = "CloseTeleportBtn"
+CloseTeleportBtn.Size = UDim2.new(0, 25, 0, 25)
+CloseTeleportBtn.Position = UDim2.new(1, -30, 0, 5)
+CloseTeleportBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+CloseTeleportBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseTeleportBtn.Font = Enum.Font.GothamBold
+CloseTeleportBtn.TextSize = 18
+CloseTeleportBtn.Text = "X"
+CloseTeleportBtn.AutoButtonColor = true
+CloseTeleportBtn.ZIndex = 25
+CloseTeleportBtn.Parent = TeleportFrame
+
+-- efek hover & klik
+CloseTeleportBtn.MouseEnter:Connect(function()
+	CloseTeleportBtn.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
+end)
+CloseTeleportBtn.MouseLeave:Connect(function()
+	CloseTeleportBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+end)
+CloseTeleportBtn.MouseButton1Click:Connect(function()
+	TeleportFrame.Visible = false
+end)
+
+local TeleCorner = Instance.new("UICorner")
+TeleCorner.CornerRadius = UDim.new(0, 12)
+TeleCorner.Parent = TeleportFrame
+
+local TeleTitle = Instance.new("TextLabel")
+TeleTitle.Name = "TeleTitle"
+TeleTitle.Text = "🌍 Select Destination"
+TeleTitle.Font = Enum.Font.GothamBold
+TeleTitle.TextSize = 16
+TeleTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+TeleTitle.Size = UDim2.new(1, 0, 0, 35)
+TeleTitle.BackgroundTransparency = 1
+TeleTitle.Parent = TeleportFrame
+
+-- Scrollable list for locations
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Name = "ScrollFrame"
+ScrollFrame.Size = UDim2.new(1, -20, 1, -80)
+ScrollFrame.Position = UDim2.new(0, 10, 0, 40)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollFrame.ScrollBarThickness = 6
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.ZIndex = 21
+ScrollFrame.Parent = TeleportFrame
+
+local UIList = Instance.new("UIListLayout")
+UIList.Parent = ScrollFrame
+UIList.Padding = UDim.new(0, 6)
+
+-- Button to open popup
+TeleportBtn.MouseButton1Click:Connect(function()
+	TeleportFrame.Visible = not TeleportFrame.Visible
+end)
+
+-- Table: display name -> command name
+local teleportDisplayList = {
+	["Ancient Jungle"] = "jungle",
+	["Sisyphus Statue"] = "statue",
+	["Treasure Room"] = "room",
+	["Kohana"] = "kohana",
+	["Kohana Volcano"] = "volcano",
+	["Mount Hallow"] = "hallow",
+	["Crater Island"] = "island",
+	["Esoteric Depths"] = "depths",
+	["Coral Reefs"] = "reefs",
+["Tropical grove"] = "grove",
+["Ancient Temple"] = "temple",
+["Fisherman Island"] = "fisherman",
+["Crystal Cavern"] = "cavern",
+["Crystal Falls"] = "falls",
+}
+
+-- Generate buttons for each teleport location
+for displayName, commandName in pairs(teleportDisplayList) do
+	local Btn = Instance.new("TextButton")
+	Btn.Name = commandName
+	Btn.Text = displayName
+	Btn.Size = UDim2.new(1, 0, 0, 30)
+	Btn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+	Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Btn.Font = Enum.Font.Gotham
+	Btn.TextSize = 14
+	Btn.ZIndex = 22
+	Btn.Parent = ScrollFrame
+
+	local BCorner = Instance.new("UICorner")
+	BCorner.CornerRadius = UDim.new(0, 6)
+	BCorner.Parent = Btn
+
+	Btn.MouseEnter:Connect(function()
+		Btn.BackgroundColor3 = Color3.fromRGB(80, 120, 80)
+	end)
+	Btn.MouseLeave:Connect(function()
+		Btn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+	end)
+end
+
+-- Update scroll size dynamically
+UIList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y + 10)
+end)
+
+-- HANDLE TELEPORT LANGSUNG TANPA GO / CANCEL + ANIMASI POP ----------------------
+local TweenService = game:GetService("TweenService")
+
+for _, btn in pairs(ScrollFrame:GetChildren()) do
+	if btn:IsA("TextButton") then
+		btn.AutoButtonColor = false
+
+		btn.MouseButton1Click:Connect(function()
+			-- animasi pop saat tombol diklik
+			local tweenIn = TweenService:Create(btn, TweenInfo.new(0.08, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = btn.Size + UDim2.new(0, 4, 0, 4)})
+			local tweenOut = TweenService:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Size = btn.Size})
+			tweenIn:Play()
+			tweenIn.Completed:Connect(function()
+				tweenOut:Play()
+			end)
+
+			-- reset warna semua tombol
+			for _, b in pairs(ScrollFrame:GetChildren()) do
+				if b:IsA("TextButton") then
+					b.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+				end
+			end
+
+			-- ubah warna tombol terpilih jadi hijau terang
+			btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+
+			-- langsung teleport ke waypoint sesuai nama tombol
+			teleportToWaypoint(btn.Name)
+
+			-- efek kecil biar kelihatan sukses teleport
+			task.wait(0.4)
+			btn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+
+			-- tutup frame teleport
+			TeleportFrame.Visible = false
+		end)
+
+		btn.MouseEnter:Connect(function()
+			btn.BackgroundColor3 = Color3.fromRGB(80, 120, 80)
+		end)
+		btn.MouseLeave:Connect(function()
+			btn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+		end)
+	end
+end
+
+-- HANDLE TELEPORT LANGSUNG TANPA GO / CANCEL ----------------------
+for _, btn in pairs(ScrollFrame:GetChildren()) do
+	if btn:IsA("TextButton") then
+		btn.AutoButtonColor = false
+		btn.MouseButton1Click:Connect(function()
+			-- reset warna semua tombol
+			for _, b in pairs(ScrollFrame:GetChildren()) do
+				if b:IsA("TextButton") then
+					b.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+				end
+			end
+
+			-- ubah warna tombol terpilih jadi hijau terang
+			btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+
+			-- langsung teleport ke waypoint sesuai nama tombol
+			teleportToWaypoint(btn.Name)
+
+			-- efek kecil biar kelihatan sukses teleport
+			task.wait(0.4)
+			btn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+
+			-- tutup frame teleport
+			TeleportFrame.Visible = false
+		end)
+
+		btn.MouseEnter:Connect(function()
+			btn.BackgroundColor3 = Color3.fromRGB(80, 120, 80)
+		end)
+		btn.MouseLeave:Connect(function()
+			btn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+		end)
+	end
+end
