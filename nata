@@ -1,3 +1,4 @@
+
 --// Fishing GUI (Modern Minimalist Edition + Auto Weather + Minimize + Waypoints + Teleport) by Nata 🎣
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -364,7 +365,7 @@ local function fishingLoop()
 		RFChargeFishingRod:InvokeServer(unpack(RemoteArgs, 1, table.maxn(RemoteArgs)))
 
 		-- Step 2: Tunggu 0.057 detik
-		task.wait(0.033)
+		task.wait(0.038)
 
 		-- Step 3: Mulai minigame dengan angka acak 0.97–0.99 (16 digit desimal)
 		local randomValue = tonumber(string.format("%.16f", (math.random() * 0.04 + 0.95)))
@@ -529,11 +530,6 @@ ScrollFrame.Parent = TeleportFrame
 local UIList = Instance.new("UIListLayout")
 UIList.Parent = ScrollFrame
 UIList.Padding = UDim.new(0, 6)
-
--- Button to open popup
-TeleportBtn.MouseButton1Click:Connect(function()
-	TeleportFrame.Visible = not TeleportFrame.Visible
-end)
 
 -- FIRST MENU FRAME (pilihan places / players)
 local TeleportMenu = Instance.new("Frame")
