@@ -611,7 +611,7 @@ local function refreshPlayers()
 		if plr.Name ~= player.Name then
 			local PBtn = Instance.new("TextButton")
 			PBtn.Size = UDim2.new(1, 0, 0, 30)
-			PBtn.Text = plr.Name
+			PBtn.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
 			PBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 			PBtn.TextColor3 = Color3.new(1,1,1)
 			PBtn.Font = Enum.Font.Gotham
