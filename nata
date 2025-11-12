@@ -29,7 +29,7 @@ local autoWeather = false
 local weatherLoopThread
 
 local waypoints = {
-    jungle = Vector3.new(1474, 6, -336),
+    jungle = Vector3.new(1483, 11, -300),
     statue = Vector3.new(-3735, -135, -1011),
 room = Vector3.new(-3597, -276, -1641),
 kohana = Vector3.new(-942, 5, 668),
