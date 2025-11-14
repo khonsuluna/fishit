@@ -1,4 +1,3 @@
-
 --// Fishing GUI (Modern Minimalist Edition + Auto Weather + Minimize + Waypoints + Teleport) by Nata 🎣
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -34,7 +33,7 @@ local waypoints = {
 room = Vector3.new(-3597, -276, -1641),
 kohana = Vector3.new(-942, 5, 668),
 volcano = Vector3.new(-587, 59, 106),
-ruins = Vector3.new(6081, -586, 4703),
+ruin = Vector3.new(6081, -586, 4703),
 island = Vector3.new(981, 44, 5071),
 reefs = Vector3.new(-2957, 15, 2056),
 depths = Vector3.new(3236, -1303, 1397),
@@ -453,7 +452,7 @@ WeatherBtn.MouseButton1Click:Connect(function()
 		weatherLoopThread = task.spawn(function()
 			while autoWeather do
 				buyAllWeather()
-				for i = 1, 895 do
+				for i = 1, 885 do
 					if not autoWeather then
 						return
 					end
@@ -666,7 +665,7 @@ local teleportDisplayList = {
 	["Treasure Room"] = "room",
 	["Kohana"] = "kohana",
 	["Kohana Volcano"] = "volcano",
-	["Ancient Ruins"] = "ruins",
+	["Ancient Ruin"] = "ruin",
 	["Crater Island"] = "island",
 	["Esoteric Depths"] = "depths",
 	["Coral Reefs"] = "reefs",
