@@ -32,16 +32,16 @@ local waypoints = {
     statue = Vector3.new(-3735, -135, -1011),
 room = Vector3.new(-3597, -276, -1641),
 kohana = Vector3.new(-942, 5, 668),
-volcano = Vector3.new(-587, 59, 106),
+volcano = Vector3.new(-608, 74, 137),
 ruin = Vector3.new(6081, -586, 4703),
 island = Vector3.new(981, 44, 5071),
-reefs = Vector3.new(-2957, 15, 2056),
+reefs = Vector3.new(-2954, 2, 2069),
 depths = Vector3.new(3236, -1303, 1397),
 grove = Vector3.new(-2150, 53, 3671),
 fisherman = Vector3.new(-137, 3, 2765),
-temple = Vector3.new(1501, -30, -560),
-cavern = Vector3.new(-1785, -435, 7290),
-falls = Vector3.new(-1956, -440, 7389)
+temple = Vector3.new(1485, -22, -641),
+altar = Vector3.new(1488, 128, -599),
+cellar = Vector3.new(2135, -91, -699)
 }
 
 ---------------------------------------------------------------------
@@ -452,7 +452,7 @@ WeatherBtn.MouseButton1Click:Connect(function()
 		weatherLoopThread = task.spawn(function()
 			while autoWeather do
 				buyAllWeather()
-				for i = 1, 878 do
+				for i = 1, 883 do
 					if not autoWeather then
 						return
 					end
@@ -672,8 +672,8 @@ local teleportDisplayList = {
 ["Tropical grove"] = "grove",
 ["Ancient Temple"] = "temple",
 ["Fisherman Island"] = "fisherman",
-["Crystal Cavern"] = "cavern",
-["Crystal Falls"] = "falls",
+["Enchant 2 Altar"] = "altar",
+["Underground Cellar"] = "cellar",
 }
 
 -- Generate buttons for each teleport location
