@@ -251,87 +251,81 @@ FishingIcon.MouseButton1Click:Connect(function()
 	Frame.Visible = true
 	FishingIcon.Visible = false
 end)
---========================================
--- INITIAL SETUP (WAJIB)
---========================================
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local waypoints = {}
-
 --// WAYPOINT & TELEPORT COMMANDS -----------------------------------
+
 local function sendMessage(text)
-	game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-		Text = text;
-		Color = Color3.fromRGB(0, 255, 128);
-		Font = Enum.Font.SourceSansBold;
-		FontSize = Enum.FontSize.Size24;
-	})
+game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+Text = text;
+Color = Color3.fromRGB(0, 255, 128);
+Font = Enum.Font.SourceSansBold;
+FontSize = Enum.FontSize.Size24;
+})
 end
 
 local function teleportTo(pos)
-	if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-		player.Character.HumanoidRootPart.CFrame = CFrame.new(pos)
-	end
+if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+player.Character.HumanoidRootPart.CFrame = CFrame.new(pos)
+end
 end
 
 local function saveWaypoint(name)
-	if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-		waypoints[name] = player.Character.HumanoidRootPart.Position
-		sendMessage("Waypoint '"..name.."' tersimpan ✅")
-	end
+if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+waypoints[name] = player.Character.HumanoidRootPart.Position
+sendMessage("Waypoint '"..name.."' tersimpan ✅")
+end
 end
 
 local function teleportToWaypoint(name)
-	local found = nil
-	local foundName = nil
-	name = name:lower()
-	for wpName, pos in pairs(waypoints) do
-		if wpName:lower():sub(1, #name) == name then
-			found = pos
-			foundName = wpName
-			break
-		end
-	end
-	if found then
-		teleportTo(found)
-		sendMessage("Teleport ke waypoint '"..foundName.."' berhasil ✅")
-	else
-		sendMessage("Waypoint '"..name.."' tidak ditemukan ❌")
-	end
+local found = nil
+local foundName = nil
+name = name:lower()
+for wpName, pos in pairs(waypoints) do
+if wpName:lower():sub(1, #name) == name then
+found = pos
+foundName = wpName
+break
+end
+end
+if found then
+teleportTo(found)
+sendMessage("Teleport ke waypoint '"..foundName.."' berhasil ✅")
+else
+sendMessage("Waypoint '"..name.."' tidak ditemukan ❌")
+end
 end
 
 local function clearWaypoints()
-	waypoints = {}
-	sendMessage("Semua waypoint telah dihapus ✅")
+waypoints = {}
+sendMessage("Semua waypoint telah dihapus ✅")
 end
 
 local function deleteWaypoint(name)
-	name = name:lower()
-	for wpName, _ in pairs(waypoints) do
-		if wpName:lower():sub(1, #name) == name then
-			waypoints[wpName] = nil
-			sendMessage("Waypoint '"..wpName.."' dihapus ✅")
-			return
-		end
-	end
-	sendMessage("Waypoint '"..name.."' tidak ditemukan ❌")
+name = name:lower()
+for wpName, _ in pairs(waypoints) do
+if wpName:lower():sub(1, #name) == name then
+waypoints[wpName] = nil
+sendMessage("Waypoint '"..wpName.."' dihapus ✅")
+return
+end
+end
+sendMessage("Waypoint '"..name.."' tidak ditemukan ❌")
 end
 
 local function teleportToPlayer(name)
-	name = name:lower()
-	local target = nil
-	for _, plr in pairs(Players:GetPlayers()) do
-		if plr.Name:lower():sub(1, #name) == name or (plr.DisplayName and plr.DisplayName:lower():sub(1, #name) == name) then
-			target = plr
-			break
-		end
-	end
-	if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-		teleportTo(target.Character.HumanoidRootPart.Position)
-		sendMessage("Teleport ke player '"..target.Name.."' berhasil ✅")
-	else
-		sendMessage("Player '"..name.."' tidak ditemukan ❌")
-	end
+name = name:lower()
+local target = nil
+for _, plr in pairs(Players:GetPlayers()) do
+if plr.Name:lower():sub(1, #name) == name or (plr.DisplayName and plr.DisplayName:lower():sub(1, #name) == name) then
+target = plr
+break
+end
+end
+if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+teleportTo(target.Character.HumanoidRootPart.Position)
+sendMessage("Teleport ke player '"..target.Name.."' berhasil ✅")
+else
+sendMessage("Player '"..name.."' tidak ditemukan ❌")
+end
 end
 -- ============================
 -- UNIVERSAL CHAT COMMAND HANDLER (WORKS 100%)
