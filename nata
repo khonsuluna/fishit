@@ -330,43 +330,48 @@ local function teleportToPlayer(name)
 end
 
 -- ============================
--- CHAT COMMANDS (TextChatService FIX)
+-- UNIVERSAL CHAT COMMAND HANDLER (WORKS 100%)
 -- ============================
 local TextChatService = game:GetService("TextChatService")
+local ChatInputBarConfiguration = TextChatService.ChatInputBarConfiguration
+local channel = ChatInputBarConfiguration.TargetTextChannel
 
-TextChatService.MessageReceived:Connect(function(message)
-    -- Hanya proses chat dari pemain sendiri
-    if not message.TextSource or message.TextSource.UserId ~= player.UserId then
-        return
-    end
-
-    local msg = message.Text
-    local args = string.split(msg, " ")
-    local command = args[1]:lower()
-
-    if command == "!sv" and args[2] then
-        saveWaypoint(args[2])
-
-    elseif command == "!tp" and args[2] then
-        teleportToWaypoint(args[2])
-
-    elseif command == "!listwp" then
-        sendMessage("Waypoints tersimpan:")
-        for name, _ in pairs(waypoints) do
-            sendMessage(name)
+if channel then
+    channel.MessageReceived:Connect(function(message)
+        -- Hanya ambil chat milik player sendiri
+        if not message.TextSource or message.TextSource.UserId ~= player.UserId then
+            return
         end
 
-    elseif command == "!clr" then
-        clearWaypoints()
+        local msg = message.Text
+        local args = string.split(msg, " ")
+        local command = args[1]:lower()
 
-    elseif command == "!del" and args[2] then
-        deleteWaypoint(args[2])
+        if command == "!sv" and args[2] then
+            saveWaypoint(args[2])
 
-    elseif command == "!to" and args[2] then
-        teleportToPlayer(args[2])
-    end
-end)
+        elseif command == "!tp" and args[2] then
+            teleportToWaypoint(args[2])
 
+        elseif command == "!listwp" then
+            sendMessage("Waypoints tersimpan:")
+            for name,_ in pairs(waypoints) do
+                sendMessage(name)
+            end
+
+        elseif command == "!clr" then
+            clearWaypoints()
+
+        elseif command == "!del" and args[2] then
+            deleteWaypoint(args[2])
+
+        elseif command == "!to" and args[2] then
+            teleportToPlayer(args[2])
+        end
+    end)
+else
+    warn("Tidak dapat menemukan chat channel! Chat command tidak aktif.")
+end
 ---------------------------------------------------------------------
 --// FISHING LOOP ---------------------------------------------------
 ---------------------------------------------------------------------
