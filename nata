@@ -329,27 +329,42 @@ local function teleportToPlayer(name)
 	end
 end
 
--- Chat commands
-player.Chatted:Connect(function(msg)
-	local args = string.split(msg, " ")
-	local command = args[1]:lower()
+-- ============================
+-- CHAT COMMANDS (TextChatService FIX)
+-- ============================
+local TextChatService = game:GetService("TextChatService")
 
-	if command == "!sv" and args[2] then
-		saveWaypoint(args[2])
-	elseif command == "!tp" and args[2] then
-		teleportToWaypoint(args[2])
-	elseif command == "!listwp" then
-		sendMessage("Waypoints tersimpan:")
-		for name, _ in pairs(waypoints) do
-			sendMessage(name)
-		end
-	elseif command == "!clr" then
-		clearWaypoints()
-	elseif command == "!del" and args[2] then
-		deleteWaypoint(args[2])
-	elseif command == "!to" and args[2] then
-		teleportToPlayer(args[2])
-	end
+TextChatService.MessageReceived:Connect(function(message)
+    -- Hanya proses chat dari pemain sendiri
+    if not message.TextSource or message.TextSource.UserId ~= player.UserId then
+        return
+    end
+
+    local msg = message.Text
+    local args = string.split(msg, " ")
+    local command = args[1]:lower()
+
+    if command == "!sv" and args[2] then
+        saveWaypoint(args[2])
+
+    elseif command == "!tp" and args[2] then
+        teleportToWaypoint(args[2])
+
+    elseif command == "!listwp" then
+        sendMessage("Waypoints tersimpan:")
+        for name, _ in pairs(waypoints) do
+            sendMessage(name)
+        end
+
+    elseif command == "!clr" then
+        clearWaypoints()
+
+    elseif command == "!del" and args[2] then
+        deleteWaypoint(args[2])
+
+    elseif command == "!to" and args[2] then
+        teleportToPlayer(args[2])
+    end
 end)
 
 ---------------------------------------------------------------------
