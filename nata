@@ -251,9 +251,14 @@ FishingIcon.MouseButton1Click:Connect(function()
 	Frame.Visible = true
 	FishingIcon.Visible = false
 end)
----------------------------------------------------------------------
+--========================================
+-- INITIAL SETUP (WAJIB)
+--========================================
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local waypoints = {}
+
 --// WAYPOINT & TELEPORT COMMANDS -----------------------------------
----------------------------------------------------------------------
 local function sendMessage(text)
 	game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
 		Text = text;
@@ -328,7 +333,6 @@ local function teleportToPlayer(name)
 		sendMessage("Player '"..name.."' tidak ditemukan ❌")
 	end
 end
-
 -- ============================
 -- UNIVERSAL CHAT COMMAND HANDLER (WORKS 100%)
 -- ============================
