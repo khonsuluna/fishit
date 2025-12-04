@@ -450,7 +450,7 @@ WeatherBtn.MouseButton1Click:Connect(function()
 		weatherLoopThread = task.spawn(function()
 			while autoWeather do
 				buyAllWeather()
-				for i = 1, 883 do
+				for i = 1, 885 do
 					if not autoWeather then
 						return
 					end
